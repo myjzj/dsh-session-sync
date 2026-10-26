@@ -1,0 +1,10 @@
+# Installed by the dsh-session-sync bundle.
+# `remoteDir` is omitted on purpose: the plugin uses <OneDrive>/dsh-session-sync
+# when it can detect OneDrive. Set `remoteDir` here to use another shared folder.
+- insert:
+    - id: session-sync
+      name: '@local/dsh-session-sync'
+      config:
+        enabled: true
+        intervalMs: 60000
+        includeSubagents: false
