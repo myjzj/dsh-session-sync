@@ -86,6 +86,12 @@ function normalizeConfig(raw) {
     intervalMs: Math.max(15_000, interval),
     flushDebounceMs: Math.max(5_000, flushDebounce),
     includeSubagents: config.includeSubagents === true,
+    includeAttachments: config.includeAttachments !== false,
+    attachmentsDir: typeof config.attachmentsDir === 'string' && config.attachmentsDir.trim().length > 0
+      ? path.resolve(config.attachmentsDir.trim())
+      : path.join(dshHome, 'attachments'),
+    maxAttachmentFiles: Number.isFinite(config.maxAttachmentFiles) ? Math.max(1, Math.trunc(config.maxAttachmentFiles)) : 500,
+    maxAttachmentBytes: Number.isFinite(config.maxAttachmentBytes) ? Math.max(1, Math.trunc(config.maxAttachmentBytes)) : 256 * 1024 * 1024,
     workspaceMap,
     accountKey: typeof config.accountKey === 'string' && config.accountKey.trim().length > 0 ? config.accountKey.trim() : undefined,
     deviceName: typeof config.deviceName === 'string' && config.deviceName.trim().length > 0 ? config.deviceName.trim() : os.hostname(),

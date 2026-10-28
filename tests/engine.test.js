@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
+import { FolderStore } from '../lib/folder-store.js'
 import { SyncEngine } from '../lib/engine.js'
 import { LocalState } from '../lib/local-state.js'
 
@@ -295,6 +296,40 @@ test('maps a remote working directory through the configured table', async () =>
     engine.config.workspaceMap = [{ remote: 'C:/work/project', local: 'D:/work/project' }]
     assert.equal(engine.mapRemoteCwd('C:/work/project'), 'D:/work/project')
     assert.equal(engine.mapRemoteCwd('C:/other'), undefined)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('mirrors content-addressed attachment objects in both directions', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dsh-sync-'))
+  try {
+    const localRoot = path.join(root, 'local-attachments')
+    const remoteRoot = path.join(root, 'remote')
+    const hash = 'a'.repeat(64)
+    const relative = path.join(hash.slice(0, 2), hash)
+    const localObject = path.join(localRoot, 'v1', 'objects', relative)
+    await mkdir(path.dirname(localObject), { recursive: true })
+    await writeFile(localObject, 'image-bytes')
+
+    const folder = new FolderStore({ root: remoteRoot, accountKey: 'test', deviceId: 'device', deviceName: 'device' })
+    await folder.ensure()
+    const engine = makeEngine(new MemoryPersistence(), folder, path.join(root, 'state'))
+    engine.remote = folder
+    engine.config.includeAttachments = true
+    engine.config.attachmentsDir = localRoot
+
+    const upload = {}
+    await engine.syncAttachments(upload)
+    assert.equal(upload.attachmentsUploaded, 1)
+    const remoteObject = path.join(remoteRoot, 'attachments', 'v1', 'objects', relative)
+    assert.equal(await readFile(remoteObject, 'utf8'), 'image-bytes')
+
+    await rm(localObject, { force: true })
+    const download = {}
+    await engine.syncAttachments(download)
+    assert.equal(download.attachmentsDownloaded, 1)
+    assert.equal(await readFile(localObject, 'utf8'), 'image-bytes')
   } finally {
     await rm(root, { recursive: true, force: true })
   }

@@ -8,6 +8,7 @@
         enabled: true
         intervalMs: 60000
         includeSubagents: false
+        includeAttachments: true
         # Keep one namespace even when one device is signed in and the other
         # uses an API key. Otherwise the signed-in device syncs user-<id> and
         # never sees the local namespace.
