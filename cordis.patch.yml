@@ -12,3 +12,8 @@
         # uses an API key. Otherwise the signed-in device syncs user-<id> and
         # never sees the local namespace.
         accountKey: local
+        # The Lenovo machine records these directories; both map onto this
+        # machine's vsProjects workspace.
+        workspaceMap:
+          - { remote: 'H:/vsProject', local: 'D:/vsProjects' }
+          - { remote: 'H:/vsProject/deepseek-workplase', local: 'D:/vsProjects' }
